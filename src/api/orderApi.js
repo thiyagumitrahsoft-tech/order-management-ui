@@ -9,8 +9,13 @@ export const orderApi = {
     return axiosClient.get(`/orders/${id}`)
   },
 
+  list: (customerId = null) => {
+    const params = customerId ? { customerId } : {}
+    return axiosClient.get('/orders', { params })
+  },
+
   listByCustomer: (customerId) => {
-    return axiosClient.get('/orders', { params: { customerId } })
+    return orderApi.list(customerId)
   },
 
   getStatus: (id) => {

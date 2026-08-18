@@ -27,12 +27,11 @@ export default function OrderList() {
 
   useEffect(() => {
     fetchCustomers()
+    fetchOrders()
   }, [])
 
   useEffect(() => {
-    if (selectedCustomer) {
-      fetchOrders()
-    }
+    fetchOrders()
   }, [selectedCustomer])
 
   const fetchCustomers = async () => {
@@ -48,11 +47,10 @@ export default function OrderList() {
   }
 
   const fetchOrders = async () => {
-    if (!selectedCustomer) return
     setLoadingOrders(true)
     setError(null)
     try {
-      const response = await orderApi.listByCustomer(selectedCustomer.id)
+      const response = await orderApi.list(selectedCustomer?.id ?? null)
       setOrders(response.data || [])
     } catch (err) {
       setError(err)
@@ -107,69 +105,68 @@ export default function OrderList() {
         </div>
       </div>
 
-      {selectedCustomer ? (
-        <>
-          {error && <ErrorAlert error={error} onRetry={fetchOrders} className="mb-3" />}
+      <>
+        {error && <ErrorAlert error={error} onRetry={fetchOrders} className="mb-3" />}
 
-          {loadingOrders ? (
-            <LoadingSpinner message="Loading orders..." />
-          ) : orders.length === 0 ? (
-            <EmptyState
-              title="No orders found"
-              message={`No orders for ${selectedCustomer.name}`}
-              icon="📋"
-            />
-          ) : (
-            <div className="row">
-              <div className="col-md-6">
-                <div className="card">
-                  <div className="card-header bg-light">
-                    <h6 className="mb-0">Orders ({orders.length})</h6>
-                  </div>
-                  <div className="list-group list-group-flush">
-                    {orders.map((order) => (
-                      <button
-                        key={order.id}
-                        className={`list-group-item list-group-item-action text-start ${
-                          selectedOrder?.id === order.id ? 'active' : ''
-                        }`}
-                        onClick={() => setSelectedOrder(order)}
-                      >
-                        <div className="d-flex justify-content-between align-items-start">
-                          <div>
-                            <strong>Order #{order.id}</strong>
-                            <div className="small text-muted">{formatDate(order.createdAt)}</div>
-                          </div>
-                          <StatusBadge status={order.status} />
+        {loadingOrders ? (
+          <LoadingSpinner message="Loading orders..." />
+        ) : orders.length === 0 ? (
+          <EmptyState
+            title="No orders found"
+            message={
+              selectedCustomer
+                ? `No orders for ${selectedCustomer.name}`
+                : 'No orders available at the moment'
+            }
+            icon="📋"
+          />
+        ) : (
+          <div className="row">
+            <div className="col-md-6">
+              <div className="card">
+                <div className="card-header bg-light">
+                  <h6 className="mb-0">
+                    Orders ({orders.length})
+                    {selectedCustomer && <span className="text-muted"> · {selectedCustomer.name}</span>}
+                  </h6>
+                </div>
+                <div className="list-group list-group-flush">
+                  {orders.map((order) => (
+                    <button
+                      key={order.id}
+                      className={`list-group-item list-group-item-action text-start ${
+                        selectedOrder?.id === order.id ? 'active' : ''
+                      }`}
+                      onClick={() => setSelectedOrder(order)}
+                    >
+                      <div className="d-flex justify-content-between align-items-start">
+                        <div>
+                          <strong>Order #{order.id}</strong>
+                          <div className="small text-muted">{formatDate(order.createdAt)}</div>
                         </div>
-                      </button>
-                    ))}
-                  </div>
+                        <StatusBadge status={order.status} />
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
-
-              <div className="col-md-6">
-                {selectedOrder ? (
-                  <OrderDetailPanel
-                    order={selectedOrder}
-                    onCancel={() => setCancelConfirm(selectedOrder)}
-                  />
-                ) : (
-                  <div className="card text-center py-5">
-                    <p className="text-muted">Select an order to view details</p>
-                  </div>
-                )}
-              </div>
             </div>
-          )}
-        </>
-      ) : (
-        <EmptyState
-          title="Select a customer"
-          message="Choose a customer to view or create orders"
-          icon="👤"
-        />
-      )}
+
+            <div className="col-md-6">
+              {selectedOrder ? (
+                <OrderDetailPanel
+                  order={selectedOrder}
+                  onCancel={() => setCancelConfirm(selectedOrder)}
+                />
+              ) : (
+                <div className="card text-center py-5">
+                  <p className="text-muted">Select an order to view details</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </>
 
       <CreateOrderModal
         show={showCreateModal}

@@ -9,7 +9,7 @@ const axiosClient = axios.create({
   timeout: 10000,
 })
 
-// Response interceptor for error handling
+
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {

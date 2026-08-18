@@ -6,7 +6,7 @@ import LoadingSpinner from '../../components/LoadingSpinner'
 import ErrorAlert from '../../components/ErrorAlert'
 import EmptyState from '../../components/EmptyState'
 import ConfirmDialog from '../../components/ConfirmDialog'
-import { customerApi } from '../../api/customerApi'
+import { customerApi, normalizeCustomersResponse } from '../../api/customerApi'
 import { CUSTOMER_STATUS } from '../../utils/constants'
 import CustomerModal from './CustomerModal'
 
@@ -33,9 +33,16 @@ export default function CustomerList() {
       } else {
         response = await customerApi.listAll()
       }
-      setCustomers(response.data || [])
+
+      const normalizedCustomers = normalizeCustomersResponse(response)
+      setCustomers(Array.isArray(normalizedCustomers) ? normalizedCustomers : [])
     } catch (err) {
-      setError(err)
+      if (err?.response?.status === 404) {
+        setCustomers([])
+        setError(null)
+      } else {
+        setError(err)
+      }
     } finally {
       setLoading(false)
     }

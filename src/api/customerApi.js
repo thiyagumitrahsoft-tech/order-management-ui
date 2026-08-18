@@ -5,15 +5,26 @@ export const customerApi = {
     return axiosClient.get('/customers')
   },
 
-  searchByEmail: (email) => {
+  searchByEmail: async (email) => {
     if (!email || email.trim() === '') {
       return customerApi.listAll()
     }
-    return axiosClient.get(`/customers/email/${email}`)
+
+    try {
+      const response = await axiosClient.get(`/customers/email/${email}`)
+      return {
+        ...response,
+        data: normalizeCustomersResponse(response),
+      }
+    } catch (error) {
+      if (error?.response?.status === 404) {
+        return { data: [] }
+      }
+      throw error
+    }
   },
 
   list: (email = '') => {
-    // Backward compatible wrapper
     return customerApi.searchByEmail(email)
   },
 
@@ -30,7 +41,9 @@ export const customerApi = {
   },
 
   updateStatus: (id, status) => {
-    return axiosClient.patch(`/customers/${id}/status`, { status })
+    return axiosClient.patch(`/customers/${id}/status`, null, {
+      params: { status },
+    })
   },
 
   delete: (id) => {
